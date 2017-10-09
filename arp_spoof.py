@@ -16,7 +16,8 @@ MyIp = get_if_addr(InterFace)
 def findMacAddr():
     global SenderMac
     arppkt = Ether(dst = BLOADCASTMAC, src = MyMac)/ARP(op=ARP.who_has, hwsrc=MyMac, psrc=MyIp, hwdst=UNKNOWNMAC, pdst=SenderIp)
-    p = sr1(arppkt, iface=InterFace)
+    print arppkt.show()
+    p = srp(arppkt, iface=InterFace)
     print p.show()
 
 def poison(sIp, tIp):
